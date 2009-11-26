@@ -1,6 +1,7 @@
 =active-expando
 
 Hayes Davis
+
 hayes [at] appozite [dot] com
 
 ==What?
@@ -14,8 +15,8 @@ all the core data in that system. If you've ever had tables with milions of rows
 in MySQL you'll know that schema changes take forever. You'll also know that you 
 often have to jump through hoops to store non-relational data in a relational 
 format. However, it's way too much work to switch an entire system to a 
-non-relational database if you need to more flexibly add attributes to some of 
-your ActiveRecord objects or store some de-normalized data easily. 
+non-relational database if you need flexibly add attributes to some of your 
+ActiveRecord objects or store some de-normalized data easily.
 
 That's where active-expando comes in. It lets you use yor existing relational 
 ActiveRecord models while giving you the ability to mix in any attributes you 
@@ -24,35 +25,34 @@ schema changes. And it's (almost) completely transparent.
 
 ==Usage
 
-===Most Basic Example
-	
-	user = User.find(1)
-	# Now set an attribute that didn't exist before
-	user.expandos.foreground_color = '000000'
-	# foreground_color is saved in Mongo
-	user.save
-	
-	# Find any users with a black foreground color
-	users = User.expando_find(:all,:conditions=>{:foreground_color=>'000000'})
-	
+===Basic Example
+  
+  user = User.find(1)
+  # Now set an attribute that didn't exist before
+  user.expandos.foreground_color = '000000'
+  # foreground_color is saved in Mongo
+  user.save
+  
+  # Find any users with a black foreground color
+  users = User.expando_find(:all,:conditions=>{:foreground_color=>'000000'})
+
 
 ===Using Delegate
 
-	class Post < ActiveRecord::Base
-		expando_config do
-			delegate :tags
-		end
-		
-		#Other active record stuff
-	end
+  class Post < ActiveRecord::Base
+    expando_config do 
+      delegate :tags
+    end
+    #Other active record stuff
+  end
 
-	p = Post.find(1)
-	p.tags = ['foo','bar'] #tags is there directly, no need for p.expandos
-	p.save
-	
-	#Find any Post with the tag "foo"
-	Post.expando_find(:all,:conditions=>{'tags'=>'foo'}	
+  p = Post.find(1)
+  p.tags = ['foo','bar'] #tags is there directly, no need for p.expandos
+  p.save
+  
+  #Find any Post with the tag "foo"
+  Post.expando_find(:all,:conditions=>{'tags'=>'foo'}	
 
 ==Installation
 Install as a rails plugin
-	script/plugin install git://github.com/hayesdavis/active-expando.git	
+  script/plugin install git://github.com/hayesdavis/active-expando.git	
