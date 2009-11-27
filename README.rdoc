@@ -13,9 +13,9 @@ MongoDB and MongoMapper.
 Lots of (most?) projects have a relational database like MySQL that holds 
 all the core data in that system. If you've ever had tables with milions of rows
 in MySQL you'll know that schema changes take forever. You'll also know that you 
-often have to jump through hoops to store non-relational data in a relational 
+often have to jump through hoops to store non-normalized data in a relational 
 format. However, it's way too much work to switch an entire system to a 
-non-relational database if you need flexibly add attributes to some of your 
+non-relational database if you need to flexibly add attributes to some of your 
 ActiveRecord objects or store some de-normalized data easily.
 
 That's where active-expando comes in. It lets you use yor existing relational 
@@ -51,7 +51,7 @@ schema changes. And it's (almost) completely transparent.
   p.save
   
   #Find any Post with the tag "foo"
-  Post.expando_find(:all,:conditions=>{'tags'=>'foo'}	
+  Post.expando_find(:all,:conditions=>{'tags'=>'foo'})
 
 ==Installation
 Install as a rails plugin

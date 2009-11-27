@@ -5,10 +5,7 @@ module ActiveExpando
 
       def new_class(ar_class)
         Class.new(Base).instance_eval do
-          include MongoMapper::Document
           set_collection_name(ar_class.table_name)
-          attr_accessor :ar_object
-          key :ar_id, Integer
           self
         end
       end
@@ -16,6 +13,10 @@ module ActiveExpando
     end
     
     class Base
+      
+      include MongoMapper::Document        
+      key :ar_id, Integer
+      
       class << self
         def new_for_active_record(ar_obj)
           if ar_obj.new_record?
@@ -24,7 +25,7 @@ module ActiveExpando
             id = ar_obj[ar_obj.class.primary_key]
             ds = find(:first,:ar_id=>id) || new(:ar_id=>id)
           end
-          ds.ar_object = ds
+          ds
         end
       end
       

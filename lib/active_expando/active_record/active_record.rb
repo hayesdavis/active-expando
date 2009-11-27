@@ -1,8 +1,8 @@
 module ActiveExpando
   module ActiveRecord
     
-    def self.included(tweet_class)
-      tweet_class.instance_eval do
+    def self.included(ar_class)
+      ar_class.instance_eval do
         extend ClassMethods
         include InstanceMethods
         before_save :validate_expandos
@@ -11,6 +11,10 @@ module ActiveExpando
     end    
   
     module ClassMethods
+      
+      PAGINATION_PROXY_INTERFACE = [
+        :total_pages,:per_page,:current_page,:total_entries,:subject
+      ]
       
       def expando_config(&block)
         Config.new(self,expandos_class,&block)
@@ -37,16 +41,15 @@ module ActiveExpando
       
       private
         def convert_result(result)
-          if result.kind_of?(ExpandoStore::Base)
-            obj = find_by_id(result.ar_id)
-            obj.send(:expandos=,result)
-            obj
+          if result.kind_of?(expandos_class)
+            ar_res = find(:first,:conditions=>{self.primary_key=>result.ar_id})
+            ar_res.send(:expandos=,result)
+            ar_res
+          elsif paginated?(result)
+            result.subject = expandos_to_active_records(result.subject)
+            result
           elsif enumerable_of_expando_stores?(result)
-            by_id_map = result.inject({}) {|h,k| h[k.ar_id] = k; h }
-            ids = result.map {|r| r.ar_id }
-            find(:all,:conditions=>{self.primary_key=>ids}).each do |t|
-              t.send(:expandos=,by_id_map[t.id])
-            end
+            expandos_to_active_records(result)
           else
             result
           end
@@ -55,9 +58,33 @@ module ActiveExpando
         def enumerable_of_expando_stores?(result)
           return false unless result.kind_of?(Enumerable)
           #Use any? because it's reasonable to assume that if 1 is, they all are
-          result.any?{|item| item.kind_of?(ExpandoStore::Base)}
+          result.any?{|item| item.kind_of?(expandos_class)}
         end
-  
+      
+        def expandos_to_active_records(exps)
+          by_id_map = exps.inject({}) {|h,k| h[k.ar_id] = k; h }
+          ids = exps.map {|r| r.ar_id }
+          find(:all,:conditions=>{self.primary_key=>ids}).each do |t|
+            t.send(:expandos=,by_id_map[t.id])
+          end
+        end
+      
+        # Nasty hack to check for whether the result is a 
+        # MongoMapper::Pagination::PaginationProxy. Since that class implements 
+        # method_missing that delegates just about everything to the 
+        # underlying Array, I can't do a class or kind_of? test and respond_to?
+        # doesn't work. So instead, I just check to see if I can call some of 
+        # the methods on the PaginationProxy. If so, I assume it's a paginated 
+        # result.
+        def paginated?(result)
+          PAGINATION_PROXY_INTERFACE.each do |meth|
+            result.send(meth)
+          end
+          true
+        rescue NoMethodError
+          false
+        end
+      
     end # End ClassMethods
     
     module InstanceMethods
