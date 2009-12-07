@@ -8,7 +8,7 @@ module ActiveExpando
         before_save :validate_expandos
         after_save :save_expandos
       end
-    end    
+    end
   
     module ClassMethods
       
@@ -16,14 +16,33 @@ module ActiveExpando
         :total_pages,:per_page,:current_page,:total_entries,:subject
       ]
       
+      DIRTY_SUFFIXES = defined?(ActiveRecord::Dirty::DIRTY_SUFFIXES) ?
+        ActiveRecord::Dirty::DIRTY_SUFFIXES :
+        ['_changed?', '_change', '_will_change!', '_was']
+      
       def expando_config(&block)
         Config.new(self,expandos_class,&block)
       end
       
       def attr_expando(*args)
-        args.each do |arg|
-          delegate arg.to_sym, "#{arg}=".to_sym, :to=>:expandos
-        end        
+        mappings = args.extract_options!
+        args.each {|arg| mappings[arg] = arg}
+        mappings.each do |intf_name,dest_name|
+          define_method intf_name do
+            expandos.send(dest_name)
+          end
+          define_method "#{intf_name}=" do |*method_args|
+            expandos.send("#{dest_name}=",*method_args)
+          end
+          define_method "#{intf_name}?" do
+            !expandos.send(dest_name).nil?
+          end
+          DIRTY_SUFFIXES.each do |suffix|
+            define_method "#{intf_name}#{suffix}" do
+              expandos.send("#{dest_name}#{suffix}")
+            end
+          end
+        end
       end
       
       def method_missing(name,*args)
@@ -91,6 +110,18 @@ module ActiveExpando
       
       def expandos
         @expandos ||= new_expandos_instance
+      end
+      
+      def changed
+        super + expandos.changed_with_aliases
+      end
+      
+      def changed?
+        super || expandos.changed?
+      end
+      
+      def changes
+        super.merge(expandos.changes_with_aliases)
       end
       
       private
