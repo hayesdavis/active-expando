@@ -34,7 +34,8 @@ module ActiveExpando
       def method_missing(name,*args)
         begin
           super
-        rescue NoMethodError
+        #ArgumentError is thrown by top-level method_missing in some cases
+        rescue NoMethodError, ArgumentError
           if name.to_s =~ /(.*)=$/
             self[$1] = *args
           elsif args.length == 0
