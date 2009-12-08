@@ -61,7 +61,7 @@ module ActiveExpando
       private
         def convert_result(result)
           if result.kind_of?(expandos_class)
-            ar_res = find(:first,:conditions=>{self.primary_key=>result.ar_id})
+            ar_res = find(:first,:conditions=>{self.primary_key=>result.id})
             ar_res.send(:expandos=,result)
             ar_res
           elsif paginated?(result)
