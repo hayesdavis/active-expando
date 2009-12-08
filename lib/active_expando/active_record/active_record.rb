@@ -81,8 +81,8 @@ module ActiveExpando
         end
       
         def expandos_to_active_records(exps)
-          by_id_map = exps.inject({}) {|h,k| h[k.ar_id] = k; h }
-          ids = exps.map {|r| r.ar_id }
+          by_id_map = exps.inject({}) {|h,k| h[k.id] = k; h }
+          ids = exps.map {|r| r.id }
           find(:all,:conditions=>{self.primary_key=>ids}).each do |t|
             t.send(:expandos=,by_id_map[t.id])
           end
@@ -112,16 +112,34 @@ module ActiveExpando
         @expandos ||= new_expandos_instance
       end
       
+      def expandos_loaded?
+        !@expandos.nil?
+      end
+      
       def changed
-        super + expandos.changed_with_aliases
+        res = super
+        # Check that the expandos are loaded so we don't call the document 
+        # store if we don't need to
+        if expandos_loaded? 
+          res += expandos.changed_with_aliases
+        end
+        res
       end
       
       def changed?
-        super || expandos.changed?
+        # Check that the expandos are loaded so we don't call the document 
+        # store if we don't need to        
+        super || (expandos_loaded? && expandos.changed?)
       end
       
       def changes
-        super.merge(expandos.changes_with_aliases)
+        # Check that the expandos are loaded so we don't call the document 
+        # store if we don't need to        
+        res = super
+        if expandos_loaded?
+          res = res.merge(expandos.changes_with_aliases)
+        end
+        res
       end
       
       private
@@ -130,9 +148,9 @@ module ActiveExpando
         end
         
         def validate_expandos
-          return unless defined?(@expandos)
+          return true unless expandos_loaded?
           unless @expandos.valid?
-            @expandos.errors.each do |attr, msgs|
+            @expandos.errors_with_aliases.each do |attr, msgs|
               Array(msgs).each do |msg|
                 self.errors.add(attr,msg)
               end
@@ -142,7 +160,7 @@ module ActiveExpando
         end
         
         def save_expandos
-          @expandos.save if defined?(@expandos)
+          @expandos.save if expandos_loaded?
         end
         
         def expandos=(expandos_store)
