@@ -160,7 +160,11 @@ module ActiveExpando
         end
         
         def save_expandos
-          @expandos.save if expandos_loaded?
+          return unless expandos_loaded?
+          if @expandos.id.nil?
+            @expandos.id = self[self.class.primary_key]
+          end
+          @expandos.save
         end
         
         def expandos=(expandos_store)
