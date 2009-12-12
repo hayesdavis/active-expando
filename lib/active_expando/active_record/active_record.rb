@@ -44,6 +44,7 @@ module ActiveExpando
             end
           end
         end
+        delegated_expandos.merge!(mappings)
       end
       
       def method_missing(name,*args)
@@ -58,6 +59,14 @@ module ActiveExpando
       
       def expandos_class
         @expandos_class ||= ExpandoStore.new_class(self)
+      end
+      
+      def delegated_expandos
+        @delegated_expandos ||= HashWithIndifferentAccess.new
+      end
+      
+      def delegated_expando?(name)
+        delegated_expandos.has_key?(name)
       end
       
       private
