@@ -7,7 +7,7 @@ hayes [at] appozite [dot] com
 ==What?
 Attach any attribute to any ActiveRecord object and store it persistently with 
 no schema changes. Retrieve ActiveRecord objects using those properties. Uses 
-MongoDB and MongoMapper.
+MongoDB and MongoMapper. Requires MongoMapper >= 0.7.1.
 
 ==Why?
 Lots of (most?) projects have a relational database like MySQL that holds 
