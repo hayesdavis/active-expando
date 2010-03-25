@@ -51,8 +51,8 @@ module ActiveExpando
         def to_criteria(options={})
           criteria_with_aliases(super)
         end
-        
-        def to_finder_options(options={})
+              
+        def to_query(options={})
           criteria, options = super
           [criteria_with_aliases(criteria),options_with_aliases(options)]
         end        
