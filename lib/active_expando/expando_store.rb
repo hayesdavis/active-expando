@@ -22,10 +22,10 @@ module ActiveExpando
       class << self
         def new_for_active_record(ar_obj)
           if ar_obj.new_record?
-            ds = new
+            ds = new(:_id=>nil)
           else
             id = ar_obj[ar_obj.class.primary_key]
-            ds = find(:first,:_id=>id) || new(:_id=>id)
+            ds = first(:_id=>id) || new(:_id=>id)
           end
           ds
         end
